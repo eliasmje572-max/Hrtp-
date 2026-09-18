@@ -3,65 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GMGN 15m Scanner</title>
+    <title>GMGN Memecoin Scanner</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #0f172a; color: #fff; padding: 15px; }
-        h1 { text-align: center; font-size: 20px; margin-bottom: 20px; }
-        .card { background: #1e293b; border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 6px solid #ccc; }
-        .legendary { border-color: #f59e0b; background: #2d2208; }
-        .rare { border-color: #3b82f6; background: #0f2347; }
-        .common { border-color: #10b981; background: #062c1e; }
-        .badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; margin-bottom: 8px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #0b0e14; color: #ffffff; padding: 16px; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { font-size: 22px; color: #f3f4f6; margin-bottom: 6px; }
+        .header p { font-size: 13px; color: #9ca3af; }
+        
+        .chains { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
+        .chain-btn { background: #1f2937; border: 1px solid #374151; color: #9ca3af; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; }
+        .chain-btn.active { background: #2563eb; color: #ffffff; border-color: #3b82f6; }
+
+        .grid { display: flex; flex-direction: column; gap: 12px; }
+        .card { background: #111827; border-radius: 12px; padding: 14px; border: 1px solid #1f2937; position: relative; overflow: hidden; }
+        
+        /* Raritetskanter */
+        .card.legendary { border-left: 5px solid #f59e0b; background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), #111827); }
+        .card.rare { border-left: 5px solid #3b82f6; background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), #111827); }
+        .card.common { border-left: 5px solid #10b981; }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .ticker-group { display: flex; align-items: center; gap: 8px; }
+        .ticker { font-size: 17px; font-weight: 700; color: #ffffff; }
+        .age { font-size: 12px; color: #f43f5e; font-weight: 600; background: rgba(244, 63, 94, 0.1); padding: 2px 6px; border-radius: 4px; }
+
+        .badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; }
         .badge-legendary { background: #f59e0b; color: #000; }
         .badge-rare { background: #3b82f6; color: #fff; }
         .badge-common { background: #10b981; color: #000; }
-        .header-row { display: flex; justify-content: space-between; align-items: center; }
-        .ticker { font-size: 18px; font-weight: bold; }
-        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; font-size: 13px; color: #cbd5e1; }
-        .btn { display: inline-block; margin-top: 10px; padding: 6px 12px; background: #334155; color: #fff; text-decoration: none; border-radius: 6px; font-size: 12px; margin-right: 5px; }
+
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; background: #1f2937; padding: 8px 12px; border-radius: 8px; font-size: 12px; }
+        .stat-item span { color: #9ca3af; display: block; font-size: 10px; }
+        .stat-item strong { color: #e5e7eb; }
+
+        .actions { display: flex; gap: 8px; margin-top: 10px; }
+        .btn { flex: 1; text-align: center; padding: 8px; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none; }
+        .btn-gmgn { background: #2563eb; color: #fff; }
+        .btn-x { background: #374151; color: #d1d5db; }
     </style>
 </head>
 <body>
 
-    <h1>🚀 GMGN Hot Coins (< 15m)</h1>
-    <div id="coin-list">Laddar mynt...</div>
+    <div class="header">
+        <h1>🔥 GMGN Hot Scanner</h1>
+        <p>Senaste tokens (< 15 minuter)</p>
+    </div>
+
+    <div class="chains">
+        <button class="chain-btn active">SOLANA</button>
+        <button class="chain-btn">BNB</button>
+        <button class="chain-btn">ETH</button>
+    </div>
+
+    <div class="grid" id="coin-container">
+        <!-- Live-kort läggs till här -->
+    </div>
 
     <script>
-        // Exempel på hur datan renderas i appen
-        const mockCoins = [
-            { symbol: "SOLCAT", age: "4.2", liquidity: 15200, volume: 48000, rarity: "legendary", twitter: "https://x.com", gmgn: "https://gmgn.ai" },
-            { symbol: "DUKE", age: "8.1", liquidity: 8400, volume: 12000, rarity: "rare", twitter: "https://x.com", gmgn: "https://gmgn.ai" },
-            { symbol: "wCat", age: "12.5", liquidity: 2300, volume: 4100, rarity: "common", twitter: null, gmgn: "https://gmgn.ai" }
+        // Exempeldata för visualisering
+        const coins = [
+            { symbol: "SOLCAT", age: "3.2m", liquidity: "$18,400", volume: "$64,200", rarity: "legendary", x: "https://x.com", gmgn: "https://gmgn.ai" },
+            { symbol: "DUKE", age: "7.8m", liquidity: "$9,100", volume: "$18,500", rarity: "rare", x: "https://x.com", gmgn: "https://gmgn.ai" },
+            { symbol: "wCat", age: "11.4m", liquidity: "$3,200", volume: "$4,100", rarity: "common", x: null, gmgn: "https://gmgn.ai" }
         ];
 
-        function renderCoins(coins) {
-            const container = document.getElementById("coin-list");
-            container.innerHTML = "";
+        const container = document.getElementById("coin-container");
 
-            coins.forEach(c => {
-                const card = document.createElement("div");
-                card.className = `card ${c.rarity}`;
-                
-                card.innerHTML = `
-                    <div class="header-row">
+        coins.forEach(c => {
+            const card = document.createElement("div");
+            card.className = `card ${c.rarity}`;
+            card.innerHTML = `
+                <div class="card-header">
+                    <div class="ticker-group">
                         <span class="ticker">$${c.symbol}</span>
-                        <span class="badge badge-${c.rarity}">${c.rarity.toUpperCase()}</span>
+                        <span class="age">⏱ ${c.age}</span>
                     </div>
-                    <div>⏱ Ålder: ${c.age} min</div>
-                    <div class="stats">
-                        <div>💧 Liq: $${c.liquidity.toLocaleString()}</div>
-                        <div>📈 Vol (5m): $${c.volume.toLocaleString()}</div>
-                    </div>
-                    <div>
-                        ${c.twitter ? `<a href="${c.twitter}" target="_blank" class="btn">Twitter / X</a>` : ''}
-                        <a href="${c.gmgn}" target="_blank" class="btn">GMGN Chart</a>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        renderCoins(mockCoins);
+                    <span class="badge badge-${c.rarity}">${c.rarity}</span>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item"><span>Likviditet</span><strong>${c.liquidity}</strong></div>
+                    <div class="stat-item"><span>5m Volym</span><strong>${c.volume}</strong></div>
+                </div>
+                <div class="actions">
+                    ${c.x ? `<a href="${c.x}" target="_blank" class="btn btn-x">Twitter / X</a>` : ''}
+                    <a href="${c.gmgn}" target="_blank" class="btn btn-gmgn">Öppna GMGN</a>
+                </div>
+            `;
+            container.appendChild(card);
+        });
     </script>
 </body>
 </html>
