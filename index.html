@@ -11,7 +11,6 @@
             --accent-green: #10b981;
             --accent-blue: #3b82f6;
             --accent-gold: #f59e0b;
-            --accent-rose: #f43f5e;
             --border-color: rgba(255, 255, 255, 0.08);
         }
 
@@ -60,7 +59,6 @@
         .btn:active { opacity: 0.8; }
         .btn-copy { background: linear-gradient(135deg, #10b981, #059669); color: #000; }
         .btn-gmgn { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; }
-        .btn-x { background: rgba(255, 255, 255, 0.08); color: #e2e8f0; border: 1px solid var(--border-color); }
         .loading { text-align: center; color: #64748b; padding: 30px; font-size: 13px; font-weight: 600; }
     </style>
 </head>
@@ -106,15 +104,6 @@
             });
         }
 
-        function sendPushNotification(symbol, hype) {
-            if ("Notification" in window && Notification.permission === "granted") {
-                new Notification(`🔥 HOT SEARCH: $${symbol}`, {
-                    body: `Activity: ${hype} | Chain: ${currentChain.toUpperCase()}`,
-                    icon: "https://gmgn.ai/favicon.ico"
-                });
-            }
-        }
-
         function switchChain(chain, btn) {
             currentChain = chain;
             document.querySelectorAll('.chain-btn').forEach(b => b.classList.remove('active'));
@@ -145,57 +134,35 @@
 
         async function fetchHotSearches() {
             const container = document.getElementById("coin-container");
-
-            // DexScreener Boosting / Trending API som fallback & direktkälla utan CORS-blockering
-            const chainMap = { 'solana': 'solana', 'bsc': 'bsc', 'ethereum': 'ethereum' };
             const gmgnChain = currentChain === 'solana' ? 'sol' : (currentChain === 'ethereum' ? 'eth' : 'bsc');
 
             try {
-                let rawTokens = [];
-
-                // Försök 1: DexScreener Trending/Boosted pairs för vald kedja
-                const res = await fetch(`https://api.dexscreener.com/token-boosts/top/v1`);
-                if (res.ok) {
-                    const data = await res.json();
-                    rawTokens = (data || []).filter(t => t.chainId === chainMap[currentChain]);
-                }
-
-                // Försök 2: Om DexScreener Boosts är tom för kedjan, sök efter sök-trender
-                if (rawTokens.length === 0) {
-                    const resSearch = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${currentChain}`);
-                    if (resSearch.ok) {
-                        const searchData = await resSearch.json();
-                        rawTokens = (searchData.pairs || [])
-                            .filter(p => p.chainId === chainMap[currentChain])
-                            .sort((a, b) => (b.txns?.h1?.buys || 0) - (a.txns?.h1?.buys || 0))
-                            .slice(0, 30);
-                    }
-                }
+                // Använd DexScreener Search endpoint som alltid returnerar aktiva och heta tokens
+                const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${currentChain}`);
+                const data = await res.json();
+                
+                let pairs = (data.pairs || [])
+                    .filter(p => p.chainId === currentChain)
+                    .sort((a, b) => (b.txns?.h1?.buys || 0) - (a.txns?.h1?.buys || 0))
+                    .slice(0, 25);
 
                 container.innerHTML = "";
 
-                if (!rawTokens || rawTokens.length === 0) {
-                    container.innerHTML = '<div class="loading">No Hot Searches found right now. Retrying...</div>';
+                if (pairs.length === 0) {
+                    container.innerHTML = '<div class="loading">No tokens found. Retrying...</div>';
                     return;
                 }
 
-                rawTokens.forEach((t, index) => {
-                    const symbol = t.baseToken?.symbol || t.tokenAddress?.substring(0, 6) || 'TOKEN';
-                    const address = t.tokenAddress || t.baseToken?.address || '';
-                    const liquidity = t.liquidity?.usd || t.totalAmount || 0;
-                    const volume = t.volume?.h1 || t.amount || 0;
-                    const swaps = t.txns?.h1?.buys ? (t.txns.h1.buys + t.txns.h1.sells) : (t.totalAmount || 100);
+                pairs.forEach((p, index) => {
+                    const symbol = p.baseToken?.symbol || 'TOKEN';
+                    const address = p.baseToken?.address || '';
+                    const volume = p.volume?.h1 || 0;
+                    const liquidity = p.liquidity?.usd || 0;
+                    const buys = p.txns?.h1?.buys || 0;
 
                     let rarity = "common";
                     if (index < 3) rarity = "legendary";
-                    else if (index < 10) rarity = "rare";
-
-                    if (!seenCoins.has(address) && address) {
-                        seenCoins.add(address);
-                        if (index < 5) {
-                            sendPushNotification(symbol, swaps);
-                        }
-                    }
+                    else if (index < 8) rarity = "rare";
 
                     const card = document.createElement("div");
                     card.className = `card ${rarity}`;
@@ -203,12 +170,12 @@
                         <div class="card-header">
                             <div class="ticker-group">
                                 <span class="ticker">#${index + 1} $${symbol}</span>
-                                <span class="hype-badge">🔥 Hot</span>
+                                <span class="hype-badge">🔥 ${buys} buys/h</span>
                             </div>
                             <span class="badge badge-${rarity}">${rarity}</span>
                         </div>
                         <div class="stats-grid">
-                            <div class="stat-item"><span>Network</span><strong>${currentChain.toUpperCase()}</strong></div>
+                            <div class="stat-item"><span>Chain</span><strong>${currentChain.toUpperCase()}</strong></div>
                             <div class="stat-item"><span>1h Vol</span><strong>${formatNumber(volume)}</strong></div>
                             <div class="stat-item"><span>Liquidity</span><strong>${formatNumber(liquidity)}</strong></div>
                         </div>
@@ -222,7 +189,7 @@
                 });
 
             } catch (err) {
-                container.innerHTML = '<div class="loading">Error fetching Hot Searches. Try switching chain.</div>';
+                container.innerHTML = '<div class="loading">Kunde inte hämta data. Kontrollera internetanslutningen.</div>';
             }
         }
 
@@ -231,7 +198,7 @@
         }
 
         fetchHotSearches();
-        setInterval(fetchHotSearches, 15000);
+        setInterval(fetchHotSearches, 10000);
     </script>
 </body>
 </html>
