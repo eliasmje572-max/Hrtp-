@@ -3,30 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GMGN Memecoin Scanner</title>
+    <title>GMGN Realtime Scanner</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #0b0e14; color: #ffffff; padding: 16px; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h1 { font-size: 22px; color: #f3f4f6; margin-bottom: 6px; }
-        .header p { font-size: 13px; color: #9ca3af; }
+        .header { text-align: center; margin-bottom: 16px; }
+        .header h1 { font-size: 20px; color: #f3f4f6; margin-bottom: 4px; }
+        .header p { font-size: 12px; color: #9ca3af; }
         
-        .chains { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
-        .chain-btn { background: #1f2937; border: 1px solid #374151; color: #9ca3af; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; }
+        .chains { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; }
+        .chain-btn { background: #1f2937; border: 1px solid #374151; color: #9ca3af; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; }
         .chain-btn.active { background: #2563eb; color: #ffffff; border-color: #3b82f6; }
 
-        .grid { display: flex; flex-direction: column; gap: 12px; }
-        .card { background: #111827; border-radius: 12px; padding: 14px; border: 1px solid #1f2937; position: relative; overflow: hidden; }
+        .grid { display: flex; flex-direction: column; gap: 10px; }
+        .card { background: #111827; border-radius: 12px; padding: 14px; border: 1px solid #1f2937; position: relative; }
         
-        /* Raritetskanter */
-        .card.legendary { border-left: 5px solid #f59e0b; background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), #111827); }
-        .card.rare { border-left: 5px solid #3b82f6; background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), #111827); }
+        .card.legendary { border-left: 5px solid #f59e0b; background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), #111827); }
+        .card.rare { border-left: 5px solid #3b82f6; background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), #111827); }
         .card.common { border-left: 5px solid #10b981; }
 
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .ticker-group { display: flex; align-items: center; gap: 8px; }
-        .ticker { font-size: 17px; font-weight: 700; color: #ffffff; }
-        .age { font-size: 12px; color: #f43f5e; font-weight: 600; background: rgba(244, 63, 94, 0.1); padding: 2px 6px; border-radius: 4px; }
+        .ticker { font-size: 16px; font-weight: 800; color: #ffffff; }
+        .age { font-size: 11px; color: #f43f5e; font-weight: 700; background: rgba(244, 63, 94, 0.15); padding: 2px 6px; border-radius: 4px; }
 
         .badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; }
         .badge-legendary { background: #f59e0b; color: #000; }
@@ -37,61 +36,125 @@
         .stat-item span { color: #9ca3af; display: block; font-size: 10px; }
         .stat-item strong { color: #e5e7eb; }
 
-        .actions { display: flex; gap: 8px; margin-top: 10px; }
-        .btn { flex: 1; text-align: center; padding: 8px; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none; }
+        .ca-box { background: #0f172a; padding: 6px 10px; border-radius: 6px; font-family: monospace; font-size: 11px; color: #94a3b8; margin-bottom: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: 1px dashed #334155; }
+
+        .actions { display: flex; gap: 6px; }
+        .btn { flex: 1; text-align: center; padding: 8px 4px; border-radius: 6px; font-size: 11px; font-weight: 600; text-decoration: none; border: none; cursor: pointer; }
+        .btn-copy { background: #10b981; color: #000; }
         .btn-gmgn { background: #2563eb; color: #fff; }
         .btn-x { background: #374151; color: #d1d5db; }
+        .loading { text-align: center; color: #9ca3af; padding: 20px; font-size: 14px; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>🔥 GMGN Hot Scanner</h1>
-        <p>Senaste tokens (< 15 minuter)</p>
+        <h1>🔥 GMGN Live Scanner</h1>
+        <p>Endast nya tokens (< 15 minuter)</p>
     </div>
 
     <div class="chains">
-        <button class="chain-btn active">SOLANA</button>
-        <button class="chain-btn">BNB</button>
-        <button class="chain-btn">ETH</button>
+        <button class="chain-btn active" onclick="switchChain('sol', this)">SOLANA</button>
+        <button class="chain-btn" onclick="switchChain('bsc', this)">BNB</button>
+        <button class="chain-btn" onclick="switchChain('eth', this)">ETH</button>
     </div>
 
     <div class="grid" id="coin-container">
-        <!-- Live-kort läggs till här -->
+        <div class="loading">Söker efter nya coins...</div>
     </div>
 
     <script>
-        // Exempeldata för visualisering
-        const coins = [
-            { symbol: "SOLCAT", age: "3.2m", liquidity: "$18,400", volume: "$64,200", rarity: "legendary", x: "https://x.com", gmgn: "https://gmgn.ai" },
-            { symbol: "DUKE", age: "7.8m", liquidity: "$9,100", volume: "$18,500", rarity: "rare", x: "https://x.com", gmgn: "https://gmgn.ai" },
-            { symbol: "wCat", age: "11.4m", liquidity: "$3,200", volume: "$4,100", rarity: "common", x: null, gmgn: "https://gmgn.ai" }
-        ];
+        let currentChain = 'sol';
 
-        const container = document.getElementById("coin-container");
+        function switchChain(chain, btn) {
+            currentChain = chain;
+            document.querySelectorAll('.chain-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            fetchNewCoins();
+        }
 
-        coins.forEach(c => {
-            const card = document.createElement("div");
-            card.className = `card ${c.rarity}`;
-            card.innerHTML = `
-                <div class="card-header">
-                    <div class="ticker-group">
-                        <span class="ticker">$${c.symbol}</span>
-                        <span class="age">⏱ ${c.age}</span>
-                    </div>
-                    <span class="badge badge-${c.rarity}">${c.rarity}</span>
-                </div>
-                <div class="stats-grid">
-                    <div class="stat-item"><span>Likviditet</span><strong>${c.liquidity}</strong></div>
-                    <div class="stat-item"><span>5m Volym</span><strong>${c.volume}</strong></div>
-                </div>
-                <div class="actions">
-                    ${c.x ? `<a href="${c.x}" target="_blank" class="btn btn-x">Twitter / X</a>` : ''}
-                    <a href="${c.gmgn}" target="_blank" class="btn btn-gmgn">Öppna GMGN</a>
-                </div>
-            `;
-            container.appendChild(card);
-        });
+        function copyCA(address, btn) {
+            navigator.clipboard.writeText(address).then(() => {
+                const originalText = btn.innerText;
+                btn.innerText = "Kopierad! ✅";
+                btn.style.background = "#059669";
+                btn.style.color = "#fff";
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.style.background = "#10b981";
+                    btn.style.color = "#000";
+                }, 2000);
+            });
+        }
+
+        async function fetchNewCoins() {
+            const container = document.getElementById("coin-container");
+            container.innerHTML = '<div class="loading">Hämtar färska mynt...</div>';
+
+            try {
+                const url = `https://gmgn.ai/defi/quotation/v1/rank/${currentChain}/swaps/1m?limit=50&orderby=creation_timestamp&direction=desc`;
+                const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+                const data = await res.json();
+                
+                const rawTokens = data?.data?.rank || [];
+                const nowTs = Math.floor(Date.now() / 1000);
+                
+                container.innerHTML = "";
+                let count = 0;
+
+                rawTokens.forEach(t => {
+                    const createdAt = t.creation_timestamp || nowTs;
+                    const ageMinutes = ((nowTs - createdAt) / 60).toFixed(1);
+
+                    if (ageMinutes <= 15.0) {
+                        count++;
+                        
+                        const liquidity = t.liquidity || 0;
+                        const volume = t.volume || 0;
+                        const swaps = t.swaps || 0;
+                        const address = t.address || '';
+                        const isPaid = t.is_paid || t.has_socials;
+                        
+                        let rarity = "common";
+                        if (isPaid && swaps > 150) rarity = "legendary";
+                        else if (isPaid || volume > 10000) rarity = "rare";
+
+                        const card = document.createElement("div");
+                        card.className = `card ${rarity}`;
+                        card.innerHTML = `
+                            <div class="card-header">
+                                <div class="ticker-group">
+                                    <span class="ticker">$${t.symbol || 'MEME'}</span>
+                                    <span class="age">⏱ ${ageMinutes}m sedan</span>
+                                </div>
+                                <span class="badge badge-${rarity}">${rarity}</span>
+                            </div>
+                            <div class="stats-grid">
+                                <div class="stat-item"><span>Likviditet</span><strong>$${Math.round(liquidity).toLocaleString()}</strong></div>
+                                <div class="stat-item"><span>Volym</span><strong>$${Math.round(volume).toLocaleString()}</strong></div>
+                            </div>
+                            <div class="ca-box">📋 ${address}</div>
+                            <div class="actions">
+                                <button class="btn btn-copy" onclick="copyCA('${address}', this)">Kopiera CA</button>
+                                ${t.twitter_username ? `<a href="https://x.com/${t.twitter_username}" target="_blank" class="btn btn-x">Twitter</a>` : ''}
+                                <a href="https://gmgn.ai/${currentChain}/token/${address}" target="_blank" class="btn btn-gmgn">GMGN</a>
+                            </div>
+                        `;
+                        container.appendChild(card);
+                    }
+                });
+
+                if (count === 0) {
+                    container.innerHTML = '<div class="loading">Inga nya mynt lanserades de senaste 15 minuterna. Söker igen snart...</div>';
+                }
+
+            } catch (err) {
+                container.innerHTML = '<div class="loading">Kunde inte hämta data just nu. Testa klicka på en annan kedja.</div>';
+            }
+        }
+
+        fetchNewCoins();
+        setInterval(fetchNewCoins, 30000);
     </script>
 </body>
 </html>
