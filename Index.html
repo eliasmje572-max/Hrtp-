@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GMGN 15m Scanner</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #0f172a; color: #fff; padding: 15px; }
+        h1 { text-align: center; font-size: 20px; margin-bottom: 20px; }
+        .card { background: #1e293b; border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 6px solid #ccc; }
+        .legendary { border-color: #f59e0b; background: #2d2208; }
+        .rare { border-color: #3b82f6; background: #0f2347; }
+        .common { border-color: #10b981; background: #062c1e; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; margin-bottom: 8px; }
+        .badge-legendary { background: #f59e0b; color: #000; }
+        .badge-rare { background: #3b82f6; color: #fff; }
+        .badge-common { background: #10b981; color: #000; }
+        .header-row { display: flex; justify-content: space-between; align-items: center; }
+        .ticker { font-size: 18px; font-weight: bold; }
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; font-size: 13px; color: #cbd5e1; }
+        .btn { display: inline-block; margin-top: 10px; padding: 6px 12px; background: #334155; color: #fff; text-decoration: none; border-radius: 6px; font-size: 12px; margin-right: 5px; }
+    </style>
+</head>
+<body>
+
+    <h1>🚀 GMGN Hot Coins (< 15m)</h1>
+    <div id="coin-list">Laddar mynt...</div>
+
+    <script>
+        // Exempel på hur datan renderas i appen
+        const mockCoins = [
+            { symbol: "SOLCAT", age: "4.2", liquidity: 15200, volume: 48000, rarity: "legendary", twitter: "https://x.com", gmgn: "https://gmgn.ai" },
+            { symbol: "DUKE", age: "8.1", liquidity: 8400, volume: 12000, rarity: "rare", twitter: "https://x.com", gmgn: "https://gmgn.ai" },
+            { symbol: "wCat", age: "12.5", liquidity: 2300, volume: 4100, rarity: "common", twitter: null, gmgn: "https://gmgn.ai" }
+        ];
+
+        function renderCoins(coins) {
+            const container = document.getElementById("coin-list");
+            container.innerHTML = "";
+
+            coins.forEach(c => {
+                const card = document.createElement("div");
+                card.className = `card ${c.rarity}`;
+                
+                card.innerHTML = `
+                    <div class="header-row">
+                        <span class="ticker">$${c.symbol}</span>
+                        <span class="badge badge-${c.rarity}">${c.rarity.toUpperCase()}</span>
+                    </div>
+                    <div>⏱ Ålder: ${c.age} min</div>
+                    <div class="stats">
+                        <div>💧 Liq: $${c.liquidity.toLocaleString()}</div>
+                        <div>📈 Vol (5m): $${c.volume.toLocaleString()}</div>
+                    </div>
+                    <div>
+                        ${c.twitter ? `<a href="${c.twitter}" target="_blank" class="btn">Twitter / X</a>` : ''}
+                        <a href="${c.gmgn}" target="_blank" class="btn">GMGN Chart</a>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        renderCoins(mockCoins);
+    </script>
+</body>
+</html>
