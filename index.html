@@ -80,9 +80,9 @@
     </div>
 
     <div class="chains">
-        <button class="chain-btn active" onclick="switchChain('sol', this)">SOLANA</button>
+        <button class="chain-btn active" onclick="switchChain('solana', this)">SOLANA</button>
         <button class="chain-btn" onclick="switchChain('bsc', this)">BNB</button>
-        <button class="chain-btn" onclick="switchChain('eth', this)">ETH</button>
+        <button class="chain-btn" onclick="switchChain('ethereum', this)">ETH</button>
     </div>
 
     <div class="grid" id="coin-container">
@@ -90,7 +90,7 @@
     </div>
 
     <script>
-        let currentChain = 'sol';
+        let currentChain = 'solana';
         let seenCoins = new Set();
 
         function enableNotifications() {
@@ -109,7 +109,7 @@
         function sendPushNotification(symbol, hype) {
             if ("Notification" in window && Notification.permission === "granted") {
                 new Notification(`🔥 HOT SEARCH: $${symbol}`, {
-                    body: `Hype Score: ${hype} | Chain: ${currentChain.toUpperCase()}`,
+                    body: `Activity: ${hype} | Chain: ${currentChain.toUpperCase()}`,
                     icon: "https://gmgn.ai/favicon.ico"
                 });
             }
@@ -146,40 +146,54 @@
         async function fetchHotSearches() {
             const container = document.getElementById("coin-container");
 
+            // DexScreener Boosting / Trending API som fallback & direktkälla utan CORS-blockering
+            const chainMap = { 'solana': 'solana', 'bsc': 'bsc', 'ethereum': 'ethereum' };
+            const gmgnChain = currentChain === 'solana' ? 'sol' : (currentChain === 'ethereum' ? 'eth' : 'bsc');
+
             try {
-                // GMGN Hot Searches API endpoint
-                const url = `https://gmgn.ai/defi/quotation/v1/rank/${currentChain}/swaps/1h?limit=50&orderby=swaps&direction=desc`;
-                const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
-                const data = await res.json();
-                
-                const rawTokens = data?.data?.rank || [];
-                const nowTs = Math.floor(Date.now() / 1000);
-                
-                container.innerHTML = "";
-                
+                let rawTokens = [];
+
+                // Försök 1: DexScreener Trending/Boosted pairs för vald kedja
+                const res = await fetch(`https://api.dexscreener.com/token-boosts/top/v1`);
+                if (res.ok) {
+                    const data = await res.json();
+                    rawTokens = (data || []).filter(t => t.chainId === chainMap[currentChain]);
+                }
+
+                // Försök 2: Om DexScreener Boosts är tom för kedjan, sök efter sök-trender
                 if (rawTokens.length === 0) {
+                    const resSearch = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${currentChain}`);
+                    if (resSearch.ok) {
+                        const searchData = await resSearch.json();
+                        rawTokens = (searchData.pairs || [])
+                            .filter(p => p.chainId === chainMap[currentChain])
+                            .sort((a, b) => (b.txns?.h1?.buys || 0) - (a.txns?.h1?.buys || 0))
+                            .slice(0, 30);
+                    }
+                }
+
+                container.innerHTML = "";
+
+                if (!rawTokens || rawTokens.length === 0) {
                     container.innerHTML = '<div class="loading">No Hot Searches found right now. Retrying...</div>';
                     return;
                 }
 
                 rawTokens.forEach((t, index) => {
-                    const createdAt = t.creation_timestamp || nowTs;
-                    const ageMinutes = Math.max(0.1, ((nowTs - createdAt) / 60)).toFixed(0);
-                    const ageDisplay = ageMinutes > 60 ? `${(ageMinutes/60).toFixed(0)}h` : `${ageMinutes}m`;
+                    const symbol = t.baseToken?.symbol || t.tokenAddress?.substring(0, 6) || 'TOKEN';
+                    const address = t.tokenAddress || t.baseToken?.address || '';
+                    const liquidity = t.liquidity?.usd || t.totalAmount || 0;
+                    const volume = t.volume?.h1 || t.amount || 0;
+                    const swaps = t.txns?.h1?.buys ? (t.txns.h1.buys + t.txns.h1.sells) : (t.totalAmount || 100);
 
-                    const liquidity = t.liquidity || 0;
-                    const volume = t.volume || 0;
-                    const swaps = t.swaps || 0;
-                    const address = t.address || '';
-                    
                     let rarity = "common";
-                    if (index < 3 || swaps > 500) rarity = "legendary";
-                    else if (swaps > 200) rarity = "rare";
+                    if (index < 3) rarity = "legendary";
+                    else if (index < 10) rarity = "rare";
 
-                    if (!seenCoins.has(address)) {
+                    if (!seenCoins.has(address) && address) {
                         seenCoins.add(address);
-                        if (index < 10) {
-                            sendPushNotification(t.symbol || 'MEME', swaps);
+                        if (index < 5) {
+                            sendPushNotification(symbol, swaps);
                         }
                     }
 
@@ -188,21 +202,20 @@
                     card.innerHTML = `
                         <div class="card-header">
                             <div class="ticker-group">
-                                <span class="ticker">#${index + 1} $${t.symbol || 'MEME'}</span>
-                                <span class="hype-badge">🔥 ${swaps}</span>
+                                <span class="ticker">#${index + 1} $${symbol}</span>
+                                <span class="hype-badge">🔥 Hot</span>
                             </div>
                             <span class="badge badge-${rarity}">${rarity}</span>
                         </div>
                         <div class="stats-grid">
-                            <div class="stat-item"><span>Age</span><strong>⏱ ${ageDisplay}</strong></div>
+                            <div class="stat-item"><span>Network</span><strong>${currentChain.toUpperCase()}</strong></div>
                             <div class="stat-item"><span>1h Vol</span><strong>${formatNumber(volume)}</strong></div>
                             <div class="stat-item"><span>Liquidity</span><strong>${formatNumber(liquidity)}</strong></div>
                         </div>
                         <div class="ca-box">📋 ${address}</div>
                         <div class="actions">
                             <button class="btn btn-copy" onclick="copyCA('${address}', this)">Copy CA</button>
-                            ${t.twitter_username ? `<a href="https://x.com/${t.twitter_username}" target="_blank" class="btn btn-x">X / Twitter</a>` : ''}
-                            <a href="https://gmgn.ai/${currentChain}/token/${address}" target="_blank" class="btn btn-gmgn">GMGN</a>
+                            <a href="https://gmgn.ai/${gmgnChain}/token/${address}" target="_blank" class="btn btn-gmgn">GMGN</a>
                         </div>
                     `;
                     container.appendChild(card);
