@@ -1,204 +1,335 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sv">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ilyes.x1 Scanner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mcc.v1 Mobile Terminal</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #07090e;
-            --card-bg: rgba(18, 24, 38, 0.7);
-            --accent-green: #10b981;
-            --accent-blue: #3b82f6;
-            --accent-gold: #f59e0b;
-            --border-color: rgba(255, 255, 255, 0.08);
+            --bg: #080b10;
+            --panel-bg: rgba(15, 22, 34, 0.95);
+            --panel-border: rgba(0, 255, 204, 0.15);
+            --accent-neon: #00ffcc;
+            --accent-sol: #9945FF;
+            --accent-bsc: #F3BA2F;
+            --accent-rh: #00C805;
+            --green: #10b981;
+            --red: #f43f5e;
+            --text-main: #e2e8f0;
+            --text-muted: #64748b;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; }
-        body { background-color: var(--bg-color); color: #f3f4f6; padding: 16px; min-height: 100vh; background-image: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15), transparent 50%); }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'JetBrains Mono', monospace; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text-main); padding: 8px; min-height: 100vh; }
 
-        .header { text-align: center; margin-bottom: 20px; position: relative; }
-        .brand-title { font-size: 26px; font-weight: 900; background: linear-gradient(135deg, #fff 30%, #a5f3fc 70%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; letter-spacing: 1px; }
-        .brand-subtitle { font-size: 11px; color: #64748b; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        
-        .pulse-dot { width: 8px; height: 8px; background-color: var(--accent-green); border-radius: 50%; box-shadow: 0 0 8px var(--accent-green); animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
 
-        .notify-bar { background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border-color); backdrop-filter: blur(10px); border-radius: 12px; padding: 12px; margin-bottom: 16px; text-align: center; font-size: 12px; color: #94a3b8; }
-        .btn-notify { background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; font-weight: 800; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; margin-top: 8px; font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase; }
+        .brand { font-size: 15px; font-weight: 800; color: var(--accent-neon); letter-spacing: 1px; }
 
-        .chains { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
-        .chain-btn { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); color: #94a3b8; padding: 8px 18px; border-radius: 20px; font-size: 11px; font-weight: 800; cursor: pointer; backdrop-filter: blur(5px); transition: all 0.2s ease; }
-        .chain-btn.active { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #ffffff; border-color: #60a5fa; box-shadow: 0 0 12px rgba(37, 99, 235, 0.4); }
+        .controls { display: flex; gap: 8px; align-items: center; }
+        select, input {
+            background: #0f172a; border: 1px solid var(--panel-border); color: #fff;
+            padding: 6px; border-radius: 6px; font-size: 11px; outline: none;
+        }
 
-        .grid { display: flex; flex-direction: column; gap: 12px; }
-        .card { background: var(--card-bg); backdrop-filter: blur(12px); border-radius: 16px; padding: 16px; border: 1px solid var(--border-color); position: relative; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); }
-        
-        .card.legendary { border-left: 4px solid var(--accent-gold); background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), var(--card-bg)); box-shadow: 0 0 15px rgba(245, 158, 11, 0.1); }
-        .card.rare { border-left: 4px solid var(--accent-blue); background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), var(--card-bg)); }
-        .card.common { border-left: 4px solid var(--accent-green); }
+        /* TABS FÖR MOBIL (Smidigt att växla kedja på mobilen) */
+        .tab-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
 
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .ticker-group { display: flex; align-items: center; gap: 8px; }
-        .ticker { font-size: 18px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; }
-        .hype-badge { font-size: 11px; color: #f59e0b; font-weight: 800; background: rgba(245, 158, 11, 0.15); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .tab-btn {
+            flex: 1;
+            padding: 8px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 800;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+        }
 
-        .badge { font-size: 9px; font-weight: 900; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .badge-legendary { background: rgba(245, 158, 11, 0.2); color: var(--accent-gold); border: 1px solid rgba(245, 158, 11, 0.4); }
-        .badge-rare { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
-        .badge-common { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.4); }
+        .tab-btn.active-sol { border-color: var(--accent-sol); color: var(--accent-sol); background: rgba(153, 69, 255, 0.1); }
+        .tab-btn.active-bsc { border-color: var(--accent-bsc); color: var(--accent-bsc); background: rgba(243, 186, 47, 0.1); }
+        .tab-btn.active-base { border-color: var(--accent-rh); color: var(--accent-rh); background: rgba(0, 200, 5, 0.1); }
 
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin: 12px 0; background: rgba(0, 0, 0, 0.2); padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.03); }
-        .stat-item span { color: #64748b; display: block; font-size: 9px; font-weight: 700; text-transform: uppercase; margin-bottom: 2px; }
-        .stat-item strong { color: #f1f5f9; font-size: 12px; font-weight: 800; }
+        /* LAYOUT */
+        .main-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
 
-        .ca-box { background: rgba(0, 0, 0, 0.4); padding: 8px 10px; border-radius: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 10px; color: #94a3b8; margin-bottom: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: 1px dashed rgba(255, 255, 255, 0.1); }
+        /* 3 COLUMNS (Dator/Sida-vid-sida om skärmen är bred) */
+        @media (min-width: 900px) {
+            .tab-bar { display: none; }
+            .main-layout { display: grid; grid-template-columns: repeat(3, 1fr) 400px; }
+            .column { display: flex !important; }
+        }
 
-        .actions { display: flex; gap: 8px; }
-        .btn { flex: 1; text-align: center; padding: 10px 4px; border-radius: 8px; font-size: 11px; font-weight: 800; text-decoration: none; border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: opacity 0.2s; }
-        .btn:active { opacity: 0.8; }
-        .btn-copy { background: linear-gradient(135deg, #10b981, #059669); color: #000; }
-        .btn-gmgn { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; }
-        .loading { text-align: center; color: #64748b; padding: 30px; font-size: 13px; font-weight: 600; }
+        .column {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            max-height: 450px;
+            overflow: hidden;
+        }
+
+        .col-sol { border-top: 3px solid var(--accent-sol); }
+        .col-bsc { border-top: 3px solid var(--accent-bsc); }
+        .col-rh { border-top: 3px solid var(--accent-rh); }
+
+        .column-header {
+            padding: 8px 10px;
+            font-size: 11px;
+            font-weight: 800;
+            border-bottom: 1px solid var(--panel-border);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .feed {
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            overflow-y: auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .symbol { font-size: 13px; font-weight: 800; }
+
+        .badge { font-size: 8px; font-weight: 800; padding: 2px 4px; border-radius: 4px; }
+        .badge-passed { background: rgba(16, 185, 129, 0.2); color: var(--green); border: 1px solid var(--green); }
+        .badge-checking { background: rgba(244, 63, 94, 0.2); color: var(--red); border: 1px solid var(--red); }
+
+        .stats { font-size: 9px; color: var(--text-muted); margin-bottom: 6px; display: flex; gap: 6px; }
+
+        .actions { display: flex; gap: 4px; }
+        .btn {
+            background: rgba(255, 255, 255, 0.08); border: none; color: #fff;
+            padding: 6px; border-radius: 4px; font-size: 10px; font-weight: 800;
+            cursor: pointer; flex: 1; text-align: center;
+        }
+        .btn-copy { background: var(--accent-neon); color: #000; font-weight: 900; }
+
+        /* CHART CONTAINER */
+        .chart-box {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            height: 380px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        iframe { width: 100%; height: 100%; border: none; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="brand-title">Ilyes.x1 Scanner</div>
-        <div class="brand-subtitle">
-            <span class="pulse-dot"></span> Hot Searches Live Feed
+        <div class="brand">⚡ Mcc.v1</div>
+        <div class="controls">
+            <label style="font-size:9px; color:var(--text-muted)">MAX AGE:</label>
+            <input type="number" id="age-input" value="15" min="2" max="30" style="width:45px;" onchange="fetchData()">
+            <select id="chart-source" onchange="updateChart()">
+                <option value="gmgn">GMGN</option>
+                <option value="dex">DexScr</option>
+            </select>
         </div>
     </div>
 
-    <div class="notify-bar" id="notify-box">
-        🔔 Enable push notifications for Hot Search alerts
-        <br>
-        <button class="btn-notify" onclick="enableNotifications()">Enable Alerts</button>
+    <!-- TABS FÖR MOBILSKÄRM -->
+    <div class="tab-bar">
+        <div class="tab-btn active-sol" onclick="switchTab('sol', this)">SOLANA</div>
+        <div class="tab-btn" onclick="switchTab('bsc', this)">BSC</div>
+        <div class="tab-btn" onclick="switchTab('base', this)">BASE</div>
     </div>
 
-    <div class="chains">
-        <button class="chain-btn active" onclick="switchChain('solana', this)">SOLANA</button>
-        <button class="chain-btn" onclick="switchChain('bsc', this)">BNB</button>
-        <button class="chain-btn" onclick="switchChain('ethereum', this)">ETH</button>
-    </div>
+    <div class="main-layout">
+        <!-- SOLANA -->
+        <div class="column col-sol" id="col-sol">
+            <div class="column-header" style="color: var(--accent-sol)">SOLANA HOT <span id="cnt-sol" style="color:#fff">0</span></div>
+            <div class="feed" id="feed-sol"></div>
+        </div>
 
-    <div class="grid" id="coin-container">
-        <div class="loading">Loading Hot Searches...</div>
+        <!-- BSC -->
+        <div class="column col-bsc" id="col-bsc" style="display:none;">
+            <div class="column-header" style="color: var(--accent-bsc)">BSC HOT <span id="cnt-bsc" style="color:#fff">0</span></div>
+            <div class="feed" id="feed-bsc"></div>
+        </div>
+
+        <!-- BASE / ROBINHOOD -->
+        <div class="column col-rh" id="col-base" style="display:none;">
+            <div class="column-header" style="color: var(--accent-rh)">ROBINHOOD (BASE) <span id="cnt-base" style="color:#fff">0</span></div>
+            <div class="feed" id="feed-base"></div>
+        </div>
+
+        <!-- LIVE CHART -->
+        <div class="chart-box">
+            <div style="padding: 6px 10px; background: #000; font-size: 10px; font-weight: 800; color: var(--accent-neon);" id="chart-title">
+                KLICKA PÅ ETT COIN FÖR CHART
+            </div>
+            <iframe id="chart-iframe" src="about:blank"></iframe>
+        </div>
     </div>
 
     <script>
-        let currentChain = 'solana';
-        let seenCoins = new Set();
+        let activeToken = null;
 
-        function enableNotifications() {
-            if (!("Notification" in window)) {
-                alert("Notifications are not supported on this browser.");
-                return;
+        function formatUSD(val) {
+            val = parseFloat(val);
+            if (val >= 1000000) return '$' + (val / 1000000).toFixed(1) + 'M';
+            if (val >= 1000) return '$' + (val / 1000).toFixed(0) + 'K';
+            return '$' + val.toFixed(1);
+        }
+
+        function copyCA(ca, btn) {
+            navigator.clipboard.writeText(ca);
+            const orig = btn.innerText;
+            btn.innerText = "COPIED! ✅";
+            setTimeout(() => btn.innerText = orig, 1200);
+        }
+
+        function selectToken(token) {
+            activeToken = token;
+            document.getElementById("chart-title").innerText = `$${token.symbol} (${token.chain.toUpperCase()}) — LIVE CHART`;
+            updateChart();
+        }
+
+        function updateChart() {
+            if (!activeToken) return;
+            const src = document.getElementById("chart-source").value;
+            const iframe = document.getElementById("chart-iframe");
+
+            if (src === "gmgn") {
+                iframe.src = `https://gmgn.ai/${activeToken.chain}/token/${activeToken.address}`;
+            } else {
+                iframe.src = `https://dexscreener.com/${activeToken.chain === 'sol' ? 'solana' : activeToken.chain}/${activeToken.address}?embed=1&theme=dark`;
             }
-            Notification.requestPermission().then(permission => {
-                if (permission === "granted") {
-                    document.getElementById("notify-box").style.display = "none";
-                    new Notification("Ilyes.x1 Scanner", { body: "Hot Search alerts activated! 🔥" });
-                }
-            });
         }
 
-        function switchChain(chain, btn) {
-            currentChain = chain;
-            document.querySelectorAll('.chain-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            fetchHotSearches();
+        function switchTab(chain, btn) {
+            if (window.innerWidth < 900) {
+                document.getElementById('col-sol').style.display = 'none';
+                document.getElementById('col-bsc').style.display = 'none';
+                document.getElementById('col-base').style.display = 'none';
+
+                document.getElementById(`col-${chain}`).style.display = 'flex';
+
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.className = 'tab-btn';
+                });
+                btn.className = `tab-btn active-${chain}`;
+            }
         }
 
-        function copyCA(address, btn) {
-            navigator.clipboard.writeText(address).then(() => {
-                const originalText = btn.innerText;
-                btn.innerText = "COPIED! ✅";
-                btn.style.background = "#059669";
-                btn.style.color = "#fff";
-                setTimeout(() => {
-                    btn.innerText = originalText;
-                    btn.style.background = "linear-gradient(135deg, #10b981, #059669)";
-                    btn.style.color = "#000";
-                }, 2000);
-            });
-        }
+        async function fetchChain(chain) {
+            const ageMins = document.getElementById("age-input").value;
+            const maxAgeSecs = ageMins * 60;
+            const now = Math.floor(Date.now() / 1000);
 
-        function formatNumber(num) {
-            if (!num) return "$0";
-            if (num >= 1e6) return "$" + (num / 1e6).toFixed(2) + "M";
-            if (num >= 1e3) return "$" + (num / 1e3).toFixed(1) + "K";
-            return "$" + Math.round(num);
-        }
-
-        async function fetchHotSearches() {
-            const container = document.getElementById("coin-container");
-            const gmgnChain = currentChain === 'solana' ? 'sol' : (currentChain === 'ethereum' ? 'eth' : 'bsc');
+            // Anropar GMGN API direkt utan backend
+            const url = `https://gmgn.ai/defi/quotation/v1/rank/${chain}/swaps/1h?limit=30&orderby=swaps&direction=desc`;
 
             try {
-                // Använd DexScreener Search endpoint som alltid returnerar aktiva och heta tokens
-                const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${currentChain}`);
-                const data = await res.json();
+                const res = await fetch(url);
+                const json = await res.json();
+                const raw = json?.data?.rank || [];
                 
-                let pairs = (data.pairs || [])
-                    .filter(p => p.chainId === currentChain)
-                    .sort((a, b) => (b.txns?.h1?.buys || 0) - (a.txns?.h1?.buys || 0))
-                    .slice(0, 25);
-
-                container.innerHTML = "";
-
-                if (pairs.length === 0) {
-                    container.innerHTML = '<div class="loading">No tokens found. Retrying...</div>';
-                    return;
-                }
-
-                pairs.forEach((p, index) => {
-                    const symbol = p.baseToken?.symbol || 'TOKEN';
-                    const address = p.baseToken?.address || '';
-                    const volume = p.volume?.h1 || 0;
-                    const liquidity = p.liquidity?.usd || 0;
-                    const buys = p.txns?.h1?.buys || 0;
-
-                    let rarity = "common";
-                    if (index < 3) rarity = "legendary";
-                    else if (index < 8) rarity = "rare";
-
-                    const card = document.createElement("div");
-                    card.className = `card ${rarity}`;
-                    card.innerHTML = `
-                        <div class="card-header">
-                            <div class="ticker-group">
-                                <span class="ticker">#${index + 1} $${symbol}</span>
-                                <span class="hype-badge">🔥 ${buys} buys/h</span>
-                            </div>
-                            <span class="badge badge-${rarity}">${rarity}</span>
-                        </div>
-                        <div class="stats-grid">
-                            <div class="stat-item"><span>Chain</span><strong>${currentChain.toUpperCase()}</strong></div>
-                            <div class="stat-item"><span>1h Vol</span><strong>${formatNumber(volume)}</strong></div>
-                            <div class="stat-item"><span>Liquidity</span><strong>${formatNumber(liquidity)}</strong></div>
-                        </div>
-                        <div class="ca-box">📋 ${address}</div>
-                        <div class="actions">
-                            <button class="btn btn-copy" onclick="copyCA('${address}', this)">Copy CA</button>
-                            <a href="https://gmgn.ai/${gmgnChain}/token/${address}" target="_blank" class="btn btn-gmgn">GMGN</a>
-                        </div>
-                    `;
-                    container.appendChild(card);
+                const filtered = [];
+                raw.forEach(t => {
+                    const age = now - (t.creation_timestamp || now);
+                    if (age >= 0 && age <= maxAgeSecs) {
+                        const liq = floatVal = parseFloat(t.liquidity || 0);
+                        const vol = floatVal = parseFloat(t.volume || 0);
+                        filtered.append = filtered.push({
+                            symbol: (t.symbol || "UNK").toUpperCase(),
+                            address: t.address,
+                            chain: chain,
+                            age_mins: Math.round(age / 60 * 10) / 10,
+                            hype: t.swaps || 0,
+                            liquidity: liq,
+                            passed: liq >= 2500 && vol >= 4000,
+                            twitter: t.twitter_username || t.twitter || ""
+                        });
+                    }
                 });
 
-            } catch (err) {
-                container.innerHTML = '<div class="loading">Kunde inte hämta data. Kontrollera internetanslutningen.</div>';
+                renderFeed(filtered, chain);
+            } catch (e) {
+                console.log("Fetch error on chain " + chain, e);
             }
         }
 
-        if (Notification.permission === "granted") {
-            document.getElementById("notify-box").style.display = "none";
+        function renderFeed(tokens, chain) {
+            const container = document.getElementById(`feed-${chain}`);
+            document.getElementById(`cnt-${chain}`).innerText = tokens.length;
+            container.innerHTML = "";
+
+            if (tokens.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:15px; font-size:10px; color:#555;">Inga nya mynt hittades</div>';
+                return;
+            }
+
+            tokens.forEach((t, i) => {
+                const card = document.createElement("div");
+                card.className = "card";
+                card.onclick = () => selectToken(t);
+
+                card.innerHTML = `
+                    <div class="card-top">
+                        <span class="symbol">#${i+1} $${t.symbol}</span>
+                        <span class="badge ${t.passed ? 'badge-passed' : 'badge-checking'}">${t.passed ? 'PASSED' : 'CHECK'}</span>
+                    </div>
+                    <div class="stats">
+                        <span>⏱ ${t.age_mins}m</span>
+                        <span>🔥 ${t.hype} Swaps</span>
+                        <span>Liq: ${formatUSD(t.liquidity)}</span>
+                    </div>
+                    <div class="actions">
+                        <button class="btn btn-copy" onclick="event.stopPropagation(); copyCA('${t.address}', this)">COPY CA</button>
+                        ${t.twitter ? `<a href="https://x.com/${t.twitter}" target="_blank" onclick="event.stopPropagation()" style="flex:1;"><button class="btn">X</button></a>` : ''}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
         }
 
-        fetchHotSearches();
-        setInterval(fetchHotSearches, 10000);
+        function fetchData() {
+            fetchChain("sol");
+            fetchChain("bsc");
+            fetchChain("base");
+        }
+
+        fetchData();
+        setInterval(fetchData, 12000);
     </script>
 </body>
 </html>
