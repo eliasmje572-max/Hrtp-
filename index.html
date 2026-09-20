@@ -1,335 +1,380 @@
 <!DOCTYPE html>
-<html lang="sv">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mcc.v1 Mobile Terminal</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #080b10;
-            --panel-bg: rgba(15, 22, 34, 0.95);
-            --panel-border: rgba(0, 255, 204, 0.15);
-            --accent-neon: #00ffcc;
-            --accent-sol: #9945FF;
-            --accent-bsc: #F3BA2F;
-            --accent-rh: #00C805;
-            --green: #10b981;
-            --red: #f43f5e;
-            --text-main: #e2e8f0;
-            --text-muted: #64748b;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mcc.v2 — GMGN Hot Terminal</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#080b10;
+    --panel:#0e131c;
+    --panel-2:#131a26;
+    --line:rgba(255,255,255,0.07);
+    --text:#e7edf5;
+    --dim:#7686a0;
+    --dimmer:#4a5670;
+    --sol:#9945FF;
+    --bsc:#F0B90B;
+    --rh:#00C805;
+    --ok:#1fdf9c;
+    --warn:#ff9d3d;
+    --danger:#ff4d6d;
+    --mono:'JetBrains Mono', ui-monospace, monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:var(--mono);-webkit-tap-highlight-color:transparent;}
+  html,body{background:var(--bg);color:var(--text);}
+  body{padding:10px;min-height:100vh;}
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'JetBrains Mono', monospace; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text-main); padding: 8px; min-height: 100vh; }
+  /* ---------- HEADER ---------- */
+  .header{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    padding:12px 14px;background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    border:1px solid var(--line);border-radius:12px;margin-bottom:10px;
+  }
+  .brand{display:flex;align-items:center;gap:8px;}
+  .brand-dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);animation:pulse 1.8s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  .brand-name{font-size:14px;font-weight:800;letter-spacing:.4px;}
+  .brand-sub{font-size:9px;color:var(--dim);font-weight:500;}
 
-        /* HEADER */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 12px;
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
-            border-radius: 10px;
-            margin-bottom: 8px;
-        }
+  .controls{display:flex;align-items:center;gap:10px;}
+  .field{display:flex;flex-direction:column;align-items:flex-end;gap:2px;}
+  .field label{font-size:8px;color:var(--dimmer);font-weight:700;}
+  .field input{
+    width:48px;background:var(--bg);border:1px solid var(--line);color:var(--text);
+    padding:5px 6px;border-radius:6px;font-size:11px;outline:none;text-align:center;
+  }
+  .field input:focus{border-color:var(--sol);}
 
-        .brand { font-size: 15px; font-weight: 800; color: var(--accent-neon); letter-spacing: 1px; }
+  .notif-toggle{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;user-select:none;}
+  .notif-toggle span{font-size:8px;color:var(--dimmer);font-weight:700;}
+  .switch{width:34px;height:19px;border-radius:20px;background:var(--bg);border:1px solid var(--line);position:relative;transition:.2s;}
+  .switch::after{content:'';position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:var(--dim);transition:.2s;}
+  .switch.on{background:rgba(31,223,156,0.15);border-color:var(--ok);}
+  .switch.on::after{left:17px;background:var(--ok);box-shadow:0 0 6px var(--ok);}
 
-        .controls { display: flex; gap: 8px; align-items: center; }
-        select, input {
-            background: #0f172a; border: 1px solid var(--panel-border); color: #fff;
-            padding: 6px; border-radius: 6px; font-size: 11px; outline: none;
-        }
+  /* ---------- TABS (mobile) ---------- */
+  .tab-bar{display:flex;gap:6px;margin-bottom:10px;}
+  .tab-btn{
+    flex:1;padding:9px;background:var(--panel);border:1px solid var(--line);
+    color:var(--dim);font-size:11px;font-weight:800;border-radius:8px;cursor:pointer;text-align:center;
+    transition:.15s;
+  }
+  .tab-btn.active-sol{border-color:var(--sol);color:var(--sol);background:rgba(153,69,255,.08);}
+  .tab-btn.active-bsc{border-color:var(--bsc);color:var(--bsc);background:rgba(240,185,11,.08);}
+  .tab-btn.active-base{border-color:var(--rh);color:var(--rh);background:rgba(0,200,5,.08);}
 
-        /* TABS FÖR MOBIL (Smidigt att växla kedja på mobilen) */
-        .tab-bar {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 8px;
-        }
+  /* ---------- LAYOUT ---------- */
+  .main-layout{display:flex;flex-direction:column;gap:10px;}
+  @media (min-width:900px){
+    .tab-bar{display:none;}
+    .main-layout{display:grid;grid-template-columns:repeat(3,1fr) 420px;align-items:start;}
+    .column{display:flex !important;}
+  }
 
-        .tab-btn {
-            flex: 1;
-            padding: 8px;
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
-            color: var(--text-muted);
-            font-size: 11px;
-            font-weight: 800;
-            border-radius: 6px;
-            cursor: pointer;
-            text-align: center;
-        }
+  .column{
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    display:flex;flex-direction:column;max-height:460px;overflow:hidden;
+  }
+  .col-sol{border-top:2px solid var(--sol);}
+  .col-bsc{border-top:2px solid var(--bsc);}
+  .col-rh{border-top:2px solid var(--rh);}
 
-        .tab-btn.active-sol { border-color: var(--accent-sol); color: var(--accent-sol); background: rgba(153, 69, 255, 0.1); }
-        .tab-btn.active-bsc { border-color: var(--accent-bsc); color: var(--accent-bsc); background: rgba(243, 186, 47, 0.1); }
-        .tab-btn.active-base { border-color: var(--accent-rh); color: var(--accent-rh); background: rgba(0, 200, 5, 0.1); }
+  .column-header{
+    padding:10px 12px;font-size:11px;font-weight:800;letter-spacing:.3px;
+    border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;
+  }
+  .col-count{background:var(--bg);padding:2px 7px;border-radius:20px;font-size:10px;color:var(--text);}
 
-        /* LAYOUT */
-        .main-layout {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+  .feed{padding:8px;display:flex;flex-direction:column;gap:7px;overflow-y:auto;}
+  .feed::-webkit-scrollbar{width:4px;}
+  .feed::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
 
-        /* 3 COLUMNS (Dator/Sida-vid-sida om skärmen är bred) */
-        @media (min-width: 900px) {
-            .tab-bar { display: none; }
-            .main-layout { display: grid; grid-template-columns: repeat(3, 1fr) 400px; }
-            .column { display: flex !important; }
-        }
+  .empty{text-align:center;padding:22px 10px;font-size:10px;color:var(--dimmer);line-height:1.5;}
 
-        .column {
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            max-height: 450px;
-            overflow: hidden;
-        }
+  .card{
+    background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:9px;
+    cursor:pointer;transition:border-color .15s,transform .15s;animation:enter .25s ease;
+  }
+  .card:hover{border-color:rgba(255,255,255,0.18);}
+  .card.selected{border-color:var(--text);}
+  @keyframes enter{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
 
-        .col-sol { border-top: 3px solid var(--accent-sol); }
-        .col-bsc { border-top: 3px solid var(--accent-bsc); }
-        .col-rh { border-top: 3px solid var(--accent-rh); }
+  .card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .symbol{font-size:13px;font-weight:800;}
+  .rank{color:var(--dimmer);font-weight:500;margin-right:3px;}
 
-        .column-header {
-            padding: 8px 10px;
-            font-size: 11px;
-            font-weight: 800;
-            border-bottom: 1px solid var(--panel-border);
-            display: flex;
-            justify-content: space-between;
-        }
+  .badge{font-size:8px;font-weight:800;padding:3px 6px;border-radius:5px;letter-spacing:.3px;}
+  .badge-ok{background:rgba(31,223,156,.14);color:var(--ok);border:1px solid rgba(31,223,156,.4);}
+  .badge-warn{background:rgba(255,157,61,.14);color:var(--warn);border:1px solid rgba(255,157,61,.4);}
 
-        .feed {
-            padding: 6px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            overflow-y: auto;
-        }
+  .stats{font-size:9.5px;color:var(--dim);margin-bottom:8px;display:flex;gap:10px;flex-wrap:wrap;}
+  .stats b{color:var(--text);font-weight:700;}
 
-        .card {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.07);
-            border-radius: 8px;
-            padding: 8px;
-        }
+  .actions{display:flex;gap:5px;}
+  .btn{
+    background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--text);
+    padding:6px;border-radius:6px;font-size:9.5px;font-weight:800;cursor:pointer;flex:1;text-align:center;
+    transition:.15s;
+  }
+  .btn:hover{background:rgba(255,255,255,.12);}
+  .btn-copy{background:var(--ok);color:#04140e;border-color:var(--ok);}
+  .btn-copy:hover{filter:brightness(1.08);}
 
-        .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-        .symbol { font-size: 13px; font-weight: 800; }
+  /* ---------- CHART ---------- */
+  .chart-box{
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    height:400px;display:flex;flex-direction:column;overflow:hidden;
+  }
+  .chart-title{
+    padding:10px 12px;background:var(--bg);font-size:10px;font-weight:800;letter-spacing:.3px;
+    color:var(--dim);border-bottom:1px solid var(--line);
+  }
+  .chart-title.live{color:var(--text);}
+  iframe{width:100%;height:100%;border:none;}
 
-        .badge { font-size: 8px; font-weight: 800; padding: 2px 4px; border-radius: 4px; }
-        .badge-passed { background: rgba(16, 185, 129, 0.2); color: var(--green); border: 1px solid var(--green); }
-        .badge-checking { background: rgba(244, 63, 94, 0.2); color: var(--red); border: 1px solid var(--red); }
-
-        .stats { font-size: 9px; color: var(--text-muted); margin-bottom: 6px; display: flex; gap: 6px; }
-
-        .actions { display: flex; gap: 4px; }
-        .btn {
-            background: rgba(255, 255, 255, 0.08); border: none; color: #fff;
-            padding: 6px; border-radius: 4px; font-size: 10px; font-weight: 800;
-            cursor: pointer; flex: 1; text-align: center;
-        }
-        .btn-copy { background: var(--accent-neon); color: #000; font-weight: 900; }
-
-        /* CHART CONTAINER */
-        .chart-box {
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
-            border-radius: 10px;
-            height: 380px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-
-        iframe { width: 100%; height: 100%; border: none; }
-    </style>
+  /* ---------- TOAST ---------- */
+  #toast-stack{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:999;display:flex;flex-direction:column;gap:6px;width:min(340px,92vw);}
+  .toast{
+    background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--ok);
+    border-radius:8px;padding:9px 11px;font-size:11px;animation:toast-in .25s ease, toast-out .3s ease 3.2s forwards;
+  }
+  .toast b{font-weight:800;}
+  @keyframes toast-in{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes toast-out{to{opacity:0;transform:translateY(-8px);}}
+</style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="brand">⚡ Mcc.v1</div>
-        <div class="controls">
-            <label style="font-size:9px; color:var(--text-muted)">MAX AGE:</label>
-            <input type="number" id="age-input" value="15" min="2" max="30" style="width:45px;" onchange="fetchData()">
-            <select id="chart-source" onchange="updateChart()">
-                <option value="gmgn">GMGN</option>
-                <option value="dex">DexScr</option>
-            </select>
-        </div>
+  <div id="toast-stack"></div>
+
+  <div class="header">
+    <div class="brand">
+      <div class="brand-dot"></div>
+      <div>
+        <div class="brand-name">Mcc.v2</div>
+        <div class="brand-sub">GMGN HOT TERMINAL</div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="field">
+        <label>MAX AGE (m)</label>
+        <input type="number" id="age-input" value="15" min="2" max="30" onchange="fetchData()">
+      </div>
+      <div class="notif-toggle" onclick="toggleNotifications()">
+        <span>ALERTS</span>
+        <div class="switch" id="notif-switch"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab-btn active-sol" onclick="switchTab('sol', this)">SOL</div>
+    <div class="tab-btn" onclick="switchTab('bsc', this)">BSC</div>
+    <div class="tab-btn" onclick="switchTab('base', this)">ROBINHOOD</div>
+  </div>
+
+  <div class="main-layout">
+    <div class="column col-sol" id="col-sol">
+      <div class="column-header" style="color:var(--sol)">SOLANA <span class="col-count" id="cnt-sol">0</span></div>
+      <div class="feed" id="feed-sol"></div>
     </div>
 
-    <!-- TABS FÖR MOBILSKÄRM -->
-    <div class="tab-bar">
-        <div class="tab-btn active-sol" onclick="switchTab('sol', this)">SOLANA</div>
-        <div class="tab-btn" onclick="switchTab('bsc', this)">BSC</div>
-        <div class="tab-btn" onclick="switchTab('base', this)">BASE</div>
+    <div class="column col-bsc" id="col-bsc" style="display:none;">
+      <div class="column-header" style="color:var(--bsc)">BSC <span class="col-count" id="cnt-bsc">0</span></div>
+      <div class="feed" id="feed-bsc"></div>
     </div>
 
-    <div class="main-layout">
-        <!-- SOLANA -->
-        <div class="column col-sol" id="col-sol">
-            <div class="column-header" style="color: var(--accent-sol)">SOLANA HOT <span id="cnt-sol" style="color:#fff">0</span></div>
-            <div class="feed" id="feed-sol"></div>
-        </div>
-
-        <!-- BSC -->
-        <div class="column col-bsc" id="col-bsc" style="display:none;">
-            <div class="column-header" style="color: var(--accent-bsc)">BSC HOT <span id="cnt-bsc" style="color:#fff">0</span></div>
-            <div class="feed" id="feed-bsc"></div>
-        </div>
-
-        <!-- BASE / ROBINHOOD -->
-        <div class="column col-rh" id="col-base" style="display:none;">
-            <div class="column-header" style="color: var(--accent-rh)">ROBINHOOD (BASE) <span id="cnt-base" style="color:#fff">0</span></div>
-            <div class="feed" id="feed-base"></div>
-        </div>
-
-        <!-- LIVE CHART -->
-        <div class="chart-box">
-            <div style="padding: 6px 10px; background: #000; font-size: 10px; font-weight: 800; color: var(--accent-neon);" id="chart-title">
-                KLICKA PÅ ETT COIN FÖR CHART
-            </div>
-            <iframe id="chart-iframe" src="about:blank"></iframe>
-        </div>
+    <div class="column col-rh" id="col-base" style="display:none;">
+      <div class="column-header" style="color:var(--rh)">ROBINHOOD (BASE) <span class="col-count" id="cnt-base">0</span></div>
+      <div class="feed" id="feed-base"></div>
     </div>
 
-    <script>
-        let activeToken = null;
+    <div class="chart-box">
+      <div class="chart-title" id="chart-title">SELECT A COIN TO VIEW ITS CHART</div>
+      <iframe id="chart-iframe" src="about:blank"></iframe>
+    </div>
+  </div>
 
-        function formatUSD(val) {
-            val = parseFloat(val);
-            if (val >= 1000000) return '$' + (val / 1000000).toFixed(1) + 'M';
-            if (val >= 1000) return '$' + (val / 1000).toFixed(0) + 'K';
-            return '$' + val.toFixed(1);
+<script>
+  const CHAIN_LABEL = { sol: 'SOL', bsc: 'BSC', base: 'Robinhood' };
+  let activeToken = null;
+  let notifsEnabled = false;
+  let firstLoad = { sol:true, bsc:true, base:true };
+  let seen = { sol:new Set(), bsc:new Set(), base:new Set() };
+
+  try{
+    notifsEnabled = localStorage.getItem('mcc_notifs') === '1' && Notification.permission === 'granted';
+  }catch(e){}
+  document.getElementById('notif-switch').classList.toggle('on', notifsEnabled);
+
+  function toggleNotifications(){
+    if(!('Notification' in window)){
+      showToast('Notifications unsupported', 'This browser cannot show alerts.');
+      return;
+    }
+    if(notifsEnabled){
+      notifsEnabled = false;
+      try{ localStorage.setItem('mcc_notifs','0'); }catch(e){}
+      document.getElementById('notif-switch').classList.remove('on');
+      return;
+    }
+    Notification.requestPermission().then(perm=>{
+      if(perm === 'granted'){
+        notifsEnabled = true;
+        try{ localStorage.setItem('mcc_notifs','1'); }catch(e){}
+        document.getElementById('notif-switch').classList.add('on');
+        showToast('Alerts on', 'You will be notified when a new coin appears.');
+      }else{
+        showToast('Alerts blocked', 'Enable notifications in your browser settings.');
+      }
+    });
+  }
+
+  function showToast(title, body){
+    const stack = document.getElementById('toast-stack');
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.innerHTML = `<b>${title}</b><br>${body}`;
+    stack.appendChild(el);
+    setTimeout(()=> el.remove(), 3600);
+  }
+
+  function notifyNewCoin(chain, t){
+    const label = CHAIN_LABEL[chain];
+    const title = `${label}: $${t.symbol}`;
+    const body = `Liq ${formatUSD(t.liquidity)} · ${t.hype} swaps · ${t.age_mins}m old`;
+    showToast(title, body);
+    if(notifsEnabled && Notification.permission === 'granted'){
+      new Notification(title, { body });
+    }
+  }
+
+  function formatUSD(val){
+    val = parseFloat(val) || 0;
+    if(val >= 1000000) return '$' + (val/1000000).toFixed(1) + 'M';
+    if(val >= 1000) return '$' + (val/1000).toFixed(0) + 'K';
+    return '$' + val.toFixed(1);
+  }
+
+  function copyCA(ca, btn){
+    navigator.clipboard.writeText(ca);
+    const orig = btn.innerText;
+    btn.innerText = 'COPIED';
+    setTimeout(()=> btn.innerText = orig, 1200);
+  }
+
+  function selectToken(token, cardEl){
+    activeToken = token;
+    document.querySelectorAll('.card').forEach(c=>c.classList.remove('selected'));
+    if(cardEl) cardEl.classList.add('selected');
+    const title = document.getElementById('chart-title');
+    title.innerText = `$${token.symbol} · ${CHAIN_LABEL[token.chain]} · LIVE CHART`;
+    title.classList.add('live');
+    updateChart();
+  }
+
+  function updateChart(){
+    if(!activeToken) return;
+    document.getElementById('chart-iframe').src = `https://gmgn.ai/${activeToken.chain}/token/${activeToken.address}`;
+  }
+
+  function switchTab(chain, btn){
+    if(window.innerWidth < 900){
+      ['sol','bsc','base'].forEach(c=> document.getElementById(`col-${c}`).style.display = 'none');
+      document.getElementById(`col-${chain}`).style.display = 'flex';
+      document.querySelectorAll('.tab-btn').forEach(b=> b.className = 'tab-btn');
+      btn.className = `tab-btn active-${chain}`;
+    }
+  }
+
+  async function fetchChain(chain){
+    const ageMins = document.getElementById('age-input').value;
+    const maxAgeSecs = ageMins * 60;
+    const now = Math.floor(Date.now() / 1000);
+    const url = `https://gmgn.ai/defi/quotation/v1/rank/${chain}/swaps/1h?limit=30&orderby=swaps&direction=desc`;
+
+    try{
+      const res = await fetch(url);
+      const json = await res.json();
+      const raw = json?.data?.rank || [];
+
+      const filtered = [];
+      raw.forEach(t=>{
+        const age = now - (t.creation_timestamp || now);
+        if(age >= 0 && age <= maxAgeSecs){
+          const liq = parseFloat(t.liquidity || 0);
+          const vol = parseFloat(t.volume || 0);
+          filtered.push({
+            symbol: (t.symbol || 'UNK').toUpperCase(),
+            address: t.address,
+            chain: chain,
+            age_mins: Math.round(age / 60 * 10) / 10,
+            hype: t.swaps || 0,
+            liquidity: liq,
+            passed: liq >= 2500 && vol >= 4000,
+            twitter: t.twitter_username || t.twitter || ''
+          });
         }
+      });
 
-        function copyCA(ca, btn) {
-            navigator.clipboard.writeText(ca);
-            const orig = btn.innerText;
-            btn.innerText = "COPIED! ✅";
-            setTimeout(() => btn.innerText = orig, 1200);
-        }
+      if(!firstLoad[chain]){
+        filtered.forEach(t=>{
+          if(!seen[chain].has(t.address)) notifyNewCoin(chain, t);
+        });
+      }
+      filtered.forEach(t=> seen[chain].add(t.address));
+      firstLoad[chain] = false;
 
-        function selectToken(token) {
-            activeToken = token;
-            document.getElementById("chart-title").innerText = `$${token.symbol} (${token.chain.toUpperCase()}) — LIVE CHART`;
-            updateChart();
-        }
+      renderFeed(filtered, chain);
+    }catch(e){
+      console.log('Fetch error on chain ' + chain, e);
+    }
+  }
 
-        function updateChart() {
-            if (!activeToken) return;
-            const src = document.getElementById("chart-source").value;
-            const iframe = document.getElementById("chart-iframe");
+  function renderFeed(tokens, chain){
+    const container = document.getElementById(`feed-${chain}`);
+    document.getElementById(`cnt-${chain}`).innerText = tokens.length;
+    container.innerHTML = '';
 
-            if (src === "gmgn") {
-                iframe.src = `https://gmgn.ai/${activeToken.chain}/token/${activeToken.address}`;
-            } else {
-                iframe.src = `https://dexscreener.com/${activeToken.chain === 'sol' ? 'solana' : activeToken.chain}/${activeToken.address}?embed=1&theme=dark`;
-            }
-        }
+    if(tokens.length === 0){
+      container.innerHTML = '<div class="empty">No coins in range yet.<br>Widen the max age or wait for the next scan.</div>';
+      return;
+    }
 
-        function switchTab(chain, btn) {
-            if (window.innerWidth < 900) {
-                document.getElementById('col-sol').style.display = 'none';
-                document.getElementById('col-bsc').style.display = 'none';
-                document.getElementById('col-base').style.display = 'none';
+    tokens.forEach((t,i)=>{
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.onclick = () => selectToken(t, card);
+      card.innerHTML = `
+        <div class="card-top">
+          <span class="symbol"><span class="rank">#${i+1}</span>$${t.symbol}</span>
+          <span class="badge ${t.passed ? 'badge-ok' : 'badge-warn'}">${t.passed ? 'VERIFIED' : 'LOW LIQ'}</span>
+        </div>
+        <div class="stats">
+          <span>${t.age_mins}m old</span>
+          <span><b>${t.hype}</b> swaps</span>
+          <span>Liq <b>${formatUSD(t.liquidity)}</b></span>
+        </div>
+        <div class="actions">
+          <button class="btn btn-copy" onclick="event.stopPropagation(); copyCA('${t.address}', this)">COPY CA</button>
+          <button class="btn" onclick="event.stopPropagation(); window.open('https://gmgn.ai/${t.chain}/token/${t.address}','_blank')">GMGN</button>
+          ${t.twitter ? `<button class="btn" onclick="event.stopPropagation(); window.open('https://x.com/${t.twitter}','_blank')">X</button>` : ''}
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
 
-                document.getElementById(`col-${chain}`).style.display = 'flex';
+  function fetchData(){
+    fetchChain('sol');
+    fetchChain('bsc');
+    fetchChain('base');
+  }
 
-                document.querySelectorAll('.tab-btn').forEach(b => {
-                    b.className = 'tab-btn';
-                });
-                btn.className = `tab-btn active-${chain}`;
-            }
-        }
-
-        async function fetchChain(chain) {
-            const ageMins = document.getElementById("age-input").value;
-            const maxAgeSecs = ageMins * 60;
-            const now = Math.floor(Date.now() / 1000);
-
-            // Anropar GMGN API direkt utan backend
-            const url = `https://gmgn.ai/defi/quotation/v1/rank/${chain}/swaps/1h?limit=30&orderby=swaps&direction=desc`;
-
-            try {
-                const res = await fetch(url);
-                const json = await res.json();
-                const raw = json?.data?.rank || [];
-                
-                const filtered = [];
-                raw.forEach(t => {
-                    const age = now - (t.creation_timestamp || now);
-                    if (age >= 0 && age <= maxAgeSecs) {
-                        const liq = floatVal = parseFloat(t.liquidity || 0);
-                        const vol = floatVal = parseFloat(t.volume || 0);
-                        filtered.append = filtered.push({
-                            symbol: (t.symbol || "UNK").toUpperCase(),
-                            address: t.address,
-                            chain: chain,
-                            age_mins: Math.round(age / 60 * 10) / 10,
-                            hype: t.swaps || 0,
-                            liquidity: liq,
-                            passed: liq >= 2500 && vol >= 4000,
-                            twitter: t.twitter_username || t.twitter || ""
-                        });
-                    }
-                });
-
-                renderFeed(filtered, chain);
-            } catch (e) {
-                console.log("Fetch error on chain " + chain, e);
-            }
-        }
-
-        function renderFeed(tokens, chain) {
-            const container = document.getElementById(`feed-${chain}`);
-            document.getElementById(`cnt-${chain}`).innerText = tokens.length;
-            container.innerHTML = "";
-
-            if (tokens.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding:15px; font-size:10px; color:#555;">Inga nya mynt hittades</div>';
-                return;
-            }
-
-            tokens.forEach((t, i) => {
-                const card = document.createElement("div");
-                card.className = "card";
-                card.onclick = () => selectToken(t);
-
-                card.innerHTML = `
-                    <div class="card-top">
-                        <span class="symbol">#${i+1} $${t.symbol}</span>
-                        <span class="badge ${t.passed ? 'badge-passed' : 'badge-checking'}">${t.passed ? 'PASSED' : 'CHECK'}</span>
-                    </div>
-                    <div class="stats">
-                        <span>⏱ ${t.age_mins}m</span>
-                        <span>🔥 ${t.hype} Swaps</span>
-                        <span>Liq: ${formatUSD(t.liquidity)}</span>
-                    </div>
-                    <div class="actions">
-                        <button class="btn btn-copy" onclick="event.stopPropagation(); copyCA('${t.address}', this)">COPY CA</button>
-                        ${t.twitter ? `<a href="https://x.com/${t.twitter}" target="_blank" onclick="event.stopPropagation()" style="flex:1;"><button class="btn">X</button></a>` : ''}
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function fetchData() {
-            fetchChain("sol");
-            fetchChain("bsc");
-            fetchChain("base");
-        }
-
-        fetchData();
-        setInterval(fetchData, 12000);
-    </script>
+  fetchData();
+  setInterval(fetchData, 12000);
+</script>
 </body>
 </html>
