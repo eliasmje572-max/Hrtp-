@@ -293,12 +293,22 @@
     const ageMins = document.getElementById('age-input').value;
     const maxAgeSecs = ageMins * 60;
     const now = Math.floor(Date.now() / 1000);
-    const url = `https://gmgn.ai/defi/quotation/v1/rank/${chain}/swaps/1h?limit=30&orderby=swaps&direction=desc`;
+    // Short windows so brand-new coins (which won't yet rank in a 1h window) still show up.
+    const windows = ['1m', '5m'];
+    const urls = windows.map(w => `https://gmgn.ai/defi/quotation/v1/rank/${chain}/swaps/${w}?limit=30&orderby=swaps&direction=desc`);
 
     try{
-      const res = await fetch(url);
-      const json = await res.json();
-      const raw = json?.data?.rank || [];
+      const responses = await Promise.all(urls.map(u => fetch(u).then(r => r.json()).catch(() => null)));
+      const seenAddr = new Set();
+      const raw = [];
+      responses.forEach(json => {
+        (json?.data?.rank || []).forEach(t => {
+          if(!seenAddr.has(t.address)){
+            seenAddr.add(t.address);
+            raw.push(t);
+          }
+        });
+      });
 
       const filtered = [];
       raw.forEach(t=>{
