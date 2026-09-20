@@ -329,6 +329,8 @@
         }
       });
 
+      filtered.sort((a, b) => a.age_mins - b.age_mins);
+
       if(!firstLoad[chain]){
         filtered.forEach(t=>{
           if(!seen[chain].has(t.address)) notifyNewCoin(chain, t);
