@@ -295,7 +295,9 @@
     const now = Math.floor(Date.now() / 1000);
     // Short windows so brand-new coins (which won't yet rank in a 1h window) still show up.
     const windows = ['1m', '5m'];
-    const urls = windows.map(w => `https://gmgn.ai/defi/quotation/v1/rank/${chain}/swaps/${w}?limit=30&orderby=swaps&direction=desc`);
+    // orderby must be an explicit value or GMGN returns an empty result. "volume" catches a fresh spike
+    // (viral/FOMO buying) faster than raw swap count does.
+    const urls = windows.map(w => `https://gmgn.ai/defi/quotation/v1/rank/${chain}/swaps/${w}?limit=30&orderby=volume&direction=desc`);
 
     try{
       const responses = await Promise.all(urls.map(u => fetch(u).then(r => r.json()).catch(() => null)));
